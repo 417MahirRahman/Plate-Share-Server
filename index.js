@@ -45,9 +45,9 @@ async function run() {
         })
     })
 
-    app.post('', async(req, res) => {
+    app.post('/addFood', async(req, res) => {
         const data = req.body
-        const result = await collection.insertOne(data)
+        const result = await foodCollection.insertOne(data)
 
         res.send({
             success: true,
