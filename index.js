@@ -37,15 +37,22 @@ async function run() {
 
     app.get('/availableFoods/:id', async(req, res) => {
         const {id} = req.params
-        const result = await foodCollection.findOne({_id: new ObjectId(id)})
+        const food = await foodCollection.findOne({_id: new ObjectId(id)})
 
         res.send({
             success: true,
-            result
+            food
         })
     })
 
-    app.post('/addFood', async(req, res) => {
+    app.get('/myFood', async (req, res) => {
+      const email = req.query.email
+      const result = await foodCollection.find({upLoadedBy: email}).toArray()
+
+      res.send(result)
+    })
+
+    app.post('/availableFoods', async(req, res) => {
         const data = req.body
         const result = await foodCollection.insertOne(data)
 
