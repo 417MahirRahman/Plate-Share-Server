@@ -55,7 +55,7 @@ async function run() {
         })
     })
 
-    app.put('/demo/:id', async(req, res) => {
+    app.put('/availableFoods/:id', async(req, res) => {
         const {id} = req.params
         const data = req.body
         const objectId = new ObjectId(id)
@@ -64,7 +64,7 @@ async function run() {
         const update = {
             $set: data
         }
-        const result = await collection.updateOne({filter, update})
+        const result = await foodCollection.updateOne({filter, update})
 
         res.send({
             success: true,
