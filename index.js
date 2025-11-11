@@ -35,9 +35,9 @@ async function run() {
         res.send(result)
     })
 
-    app.get('/demo/:id', async(req, res) => {
+    app.get('/availableFoods/:id', async(req, res) => {
         const {id} = req.params
-        const result = await collection.findOne({_id: new ObjectId(id)}).toArray()
+        const result = await foodCollection.findOne({_id: new ObjectId(id)})
 
         res.send({
             success: true,
