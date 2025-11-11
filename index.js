@@ -72,12 +72,12 @@ async function run() {
         })
     })
 
-    app.delete('/demo/id', async(req, res) => {
+    app.delete('/availableFoods/id', async(req, res) => {
         const {id} = req.params
         const objectId = new ObjectId(id)
         const filter = {_id: objectId}
 
-        const result = await collection.deleteOne({filter})
+        const result = await foodCollection.deleteOne({filter})
 
         req.send({
             success: true,
