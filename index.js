@@ -25,28 +25,6 @@ const client = new MongoClient(uri, {
   },
 });
 
-//middleware
-const verifyToken = async (req, res, next) => {
-  const authorization = req.headers.authorization;
-
-  if (!authorization) {
-    return res.status(401).send({
-      message: "Token not found.",
-    });
-  }
-
-  const token = authorization.split(" ")[1];
-
-  try {
-    await admin.auth().verifyIdToken(token);
-    next();
-  } catch {
-    res.status(401).send({
-      message: "Token not found.",
-    });
-  }
-};
-
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -65,7 +43,7 @@ async function run() {
     });
 
     // Get a specific food by ID
-    app.get("/availableFoods/:id", verifyToken, async (req, res) => {
+    app.get("/availableFoods/:id", async (req, res) => {
       const { id } = req.params;
       const food = await foodCollection.findOne({ _id: new ObjectId(id) });
 
@@ -87,7 +65,7 @@ async function run() {
     });
 
     // Get all foods posted by a specific user
-    app.get("/myFood", verifyToken, async (req, res) => {
+    app.get("/myFood", async (req, res) => {
       const email = req.query.email;
       const result = await foodCollection
         .find({ donatorEmail: email })
@@ -97,14 +75,14 @@ async function run() {
     });
 
     // Get food requests made by the user
-    app.get("/FoodRequest", verifyToken, async (req, res) => {
+    app.get("/FoodRequest", async (req, res) => {
       const result = await foodRequestCollection.find().toArray();
 
       res.send(result);
     });
 
     // Get a specific food request by ID
-    app.get("/FoodRequest/:id", verifyToken, async (req, res) => {
+    app.get("/FoodRequest/:id", async (req, res) => {
       const { id } = req.params;
       const food = await foodRequestCollection.findOne({
         _id: new ObjectId(id),
@@ -117,7 +95,7 @@ async function run() {
     });
 
     // Get food requests sent by the user (as owner)
-    app.get("/myFoodRequests/", verifyToken, (req, res) => {
+    app.get("/myFoodRequests/", (req, res) => {
       const email = req.query.email;
       if (!email)
         return res.send({ success: false, message: "Email is required" });
@@ -135,7 +113,7 @@ async function run() {
     });
 
     // Post a new available food
-    app.post("/availableFoods", verifyToken,  async (req, res) => {
+    app.post("/availableFoods", async (req, res) => {
       const data = req.body;
       const result = await foodCollection.insertOne(data);
 
@@ -146,13 +124,14 @@ async function run() {
     });
 
     // Post a new food request
-    app.post("/FoodRequest", verifyToken, async (req, res) => {
+    app.post("/FoodRequest", async (req, res) => {
       const data = {
         Name: req.body.Name,
         Email: req.body.Email,
         ImageURL: req.body.ImageURL,
         foodID: req.body.foodID,
         foodname: req.body.foodname,
+        foodImage: req.body.foodImage,
         foodOwnerEmail: req.body.foodOwnerEmail,
         ContactNumber: req.body.ContactNumber,
         foodStatus: "Pending",
@@ -168,7 +147,7 @@ async function run() {
     });
 
     // Update an available food by ID
-    app.put("/availableFoods/:id", verifyToken, async (req, res) => {
+    app.put("/availableFoods/:id", async (req, res) => {
       const id = req.params.id;
 
       const updatedData = {
@@ -198,7 +177,7 @@ async function run() {
     });
 
     // Update FoodRequest status
-    app.put("/FoodRequest/:id", verifyToken, async (req, res) => {
+    app.put("/FoodRequest/:id", async (req, res) => {
       const id = req.params.id;
       const { foodStatus } = req.body;
 
@@ -210,11 +189,16 @@ async function run() {
         { returnDocument: "after" }
       );
 
-      res.send({ success: true, updatedRequest: result.value });
+      const updated = result.value || result;
+
+      res.send({
+        success: true,
+        updatedRequest: updated,
+      });
     });
 
     // Delete an available food by ID
-    app.delete("/availableFoods/:id", verifyToken, async (req, res) => {
+    app.delete("/availableFoods/:id", async (req, res) => {
       const { id } = req.params;
       const objectId = new ObjectId(id);
       const filter = { _id: objectId };
@@ -228,7 +212,7 @@ async function run() {
     });
 
     // Delete an food-request food by ID
-    app.delete("/FoodRequest/:id", verifyToken, async (req, res) => {
+    app.delete("/FoodRequest/:id", async (req, res) => {
       const { id } = req.params;
       const objectId = new ObjectId(id);
       const filter = { _id: objectId };
