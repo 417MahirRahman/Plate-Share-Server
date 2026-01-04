@@ -37,9 +37,53 @@ async function run() {
 
     // Get all available foods
     app.get("/availableFoods", async (req, res) => {
-      const result = await foodCollection.find().toArray();
+      const {
+        category,
+        location,
+        limit = 0,
+        skip = 0,
+        sort = "quantity_desc",
+        search = "",
+      } = req.query;
 
-      res.send(result);
+      //Sort
+      let sortQuery = {};
+
+      if (sort === "quantity_desc") {
+        sortQuery = { quantity: -1 };
+      } else {
+        sortQuery = { quantity: 1 };
+      }
+
+      //Filter
+      const filterQuery = {
+        $or: [
+          { Location: { $regex: search, $options: "i" } },
+          { foodName: { $regex: search, $options: "i" } },
+        ],
+      };
+
+      if (category) {
+        filterQuery.foodName = { $regex: category, $options: "i" };
+      }
+
+      if (location) {
+        filterQuery.Location = location;
+      }
+      const result = await foodCollection
+        .find({
+          ...filterQuery,
+        })
+        .sort(sortQuery)
+        .limit(Number(limit))
+        .skip(Number(skip))
+        .toArray();
+
+      const count = await foodCollection.countDocuments({
+        ...filterQuery,
+      });
+
+      res.send({ result, total: count });
     });
 
     // Get a specific food by ID
